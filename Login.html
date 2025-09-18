@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="card"></div>
+    <div class="caja">
+
+        <div class="login">
+            <h1>LOGIN</h1>
+        </div>
+
+
+        <form id="form-login">
+            <div class="imput">
+                <label for="nombre">Nombre del Usuario</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Ingrese su nombre" required>
+
+                <label for="correo">Correo:</label>
+                <input type="email" id="correo" name="correo" placeholder="Ingrese su correo" required>
+
+                <label for="contraseña">Contraseña:</label>
+                <input type="password" id="contraseña" name="contraseña" placeholder="Mínimo 8 caracteres." required>
+                <div id="fuerza-contraseña" style="height: 10px; border-radius: 5px; margin-bottom: 5px;"></div>
+                <span id="mensaje-contraseña" style="font-size: 0.9em; font-weight: bold;"></span>
+
+                <script>
+                    document.getElementById('contraseña').addEventListener('input', function () {
+                        const barra = document.getElementById('fuerza-contraseña');
+                        const mensaje = document.getElementById('mensaje-contraseña');
+                        const valor = this.value;
+                        let fuerza = 0;
+
+                        if (valor.length >= 8) fuerza++;
+                        if (/[A-Z]/.test(valor)) fuerza++;
+                        if (/[0-9]/.test(valor)) fuerza++;
+                        if (/[^A-Za-z0-9]/.test(valor)) fuerza++;
+
+                        if (valor.length === 0) {
+                            barra.style.background = '';
+                            mensaje.textContent = '';
+                        } else if (fuerza <= 1) {
+                            barra.style.background = 'red';
+                            mensaje.textContent = 'Contraseña no segura';
+                            mensaje.style.color = 'red';
+                        } else if (fuerza === 2) {
+                            barra.style.background = 'orange';
+                            mensaje.textContent = 'La contraseña puede mejorar';
+                            mensaje.style.color = 'orange';
+                        } else if (fuerza >= 3) {
+                            barra.style.background = 'green';
+                            mensaje.textContent = 'Contraseña segura';
+                            mensaje.style.color = 'green';
+                        }
+                    });
+                </script>
+
+                <button type="submit">Enviar</button>
+                <div id="mensaje-exito" style="margin-top: 10px; font-weight: bold; color: green;"></div>
+            </div>
+        </form>
+    </div>
+    <img src="Imagen2.png" alt="Mi Imagen" class="logo">
+
+    <script>
+
+        document.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            document.getElementById('mensaje-exito').textContent = 'El ingreso se generó de manera exitosa';
+        });
+    </script>
+</body>
+
+</html>
