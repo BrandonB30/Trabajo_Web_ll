@@ -13,6 +13,13 @@ interface AppState {
   filter: Filter;
 }
 
+interface UserSession {
+  isAuthenticated: boolean;
+  username: string;
+  email: string;
+  loginTime: number;
+}
+
 // ===== Estado =====
 const state: AppState = { tasks: [], filter: "all" };
 const uid = (): string => Math.random().toString(36).slice(2, 10);
@@ -45,6 +52,95 @@ function clearAllStorage(): void {
   }
 }
 
+// ===== Autenticación =====
+const SESSION_KEY = "todo-app-session";
+
+function checkAuthentication(): boolean {
+  try {
+    const sessionData = localStorage.getItem(SESSION_KEY);
+    if (!sessionData) return false;
+    
+    const session: UserSession = JSON.parse(sessionData);
+    
+    // Verificar si la sesión no ha expirado (24 horas)
+    const now = Date.now();
+    const sessionAge = now - session.loginTime;
+    const maxAge = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+    
+    if (sessionAge > maxAge) {
+      clearSession();
+      return false;
+    }
+    
+    return session.isAuthenticated;
+  } catch {
+    return false;
+  }
+}
+
+function getCurrentUser(): UserSession | null {
+  try {
+    const sessionData = localStorage.getItem(SESSION_KEY);
+    return sessionData ? JSON.parse(sessionData) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearSession(): void {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch {
+    // no-op
+  }
+}
+
+function redirectToLogin(): void {
+  window.location.href = "Login.html";
+}
+//Exportar e importar tareas
+function exportTasks(): void {
+  const dataStr = JSON.stringify(state.tasks, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "tareas.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function importTasks(file: File): void {
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result as string) as Task[];
+
+      // Validación básica para evitar errores
+      if (!Array.isArray(imported)) throw new Error("Formato inválido");
+      for (const t of imported) {
+        if (typeof t.id !== "string" ||
+            typeof t.title !== "string" ||
+            typeof t.done !== "boolean" ||
+            typeof t.createdAt !== "number") {
+          throw new Error("Formato inválido");
+        }
+      }
+
+      state.tasks = imported;
+      render();
+      alert("Tareas importadas correctamente.");
+    } catch (error) {
+      alert("El archivo no es válido o está corrupto.");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
 // ===== DOM =====
 const $input = document.getElementById("task-input") as HTMLInputElement;
 const $addBtn = document.getElementById("add-btn") as HTMLButtonElement;
@@ -55,6 +151,37 @@ const $clearDone = document.getElementById("clear-done") as HTMLButtonElement;
 const $filterButtons = Array.from(
   document.querySelectorAll<HTMLButtonElement>('button[data-filter]')
 );
+
+//Exportar e importar
+const $exportBtn = document.getElementById("export-btn") as HTMLButtonElement;
+const $importBtn = document.getElementById("import-btn") as HTMLButtonElement;
+const $importFile = document.getElementById("import-file") as HTMLInputElement;
+
+// Función para agregar botón de logout
+function addLogoutButton(): void {
+  const existing = document.getElementById("logout-btn") as HTMLButtonElement | null;
+  if (existing) return;
+
+  const user = getCurrentUser();
+  if (!user) return;
+
+  // Buscar el contenedor de botones en la barra superior
+  const buttonContainer = document.querySelector('.d-flex.gap-2');
+  if (!buttonContainer) return;
+
+  const logoutBtn = document.createElement("button");
+  logoutBtn.id = "logout-btn";
+  logoutBtn.className = "btn btn-outline-danger btn-sm";
+  logoutBtn.innerHTML = `<i class="bi bi-box-arrow-right me-1"></i>Cerrar sesión (${user.username})`;
+  logoutBtn.addEventListener("click", () => {
+    if (confirm(`¿Estás seguro de que quieres cerrar sesión, ${user.username}?`)) {
+      clearSession();
+      redirectToLogin();
+    }
+  });
+
+  buttonContainer.appendChild(logoutBtn);
+}
 
 // Stats (opcionales)
 const $statActive = document.getElementById("stat-active") as HTMLElement | null;
@@ -80,6 +207,7 @@ function removeTask(id: string): void {
   state.tasks = state.tasks.filter(t => t.id !== id);
   render();
 }
+
 
 function clearDone(): void {
   state.tasks = state.tasks.filter(t => !t.done);
@@ -234,6 +362,14 @@ function render(): void {
     col.appendChild(card);
     $list.appendChild(col);
   }
+  // Crear el botón para el video de YouTube
+  const videoBtn = document.createElement("button");
+  videoBtn.type = "button";
+  videoBtn.className = "btn btn-sm btn-success";
+  videoBtn.innerHTML = '<i class="bi bi-play-circle me-1"></i>Ver video sobre cronograma de actividades';
+  videoBtn.addEventListener("click", () => {
+  window.open("https://www.youtube.com/watch?v=P-NBpBTXL4c&pp=ygUlQ1JFQUNJT04gREUgQ1JPTk9HUkFNQSBERSBBQ1RJVklEQURFU9IHCQnKCQGHKiGM7w%3D%3Dvideo", "_blank");
+});
 
   // Contador y stats
   const total = state.tasks.length;
@@ -252,6 +388,9 @@ function render(): void {
 
   // Asegurar botón Reset en la UI
   ensureResetButton();
+
+  // Asegurar botón de logout en la UI
+  addLogoutButton();
 
   // Guardar después de actualizar la vista/estado
   saveTasks();
@@ -274,16 +413,92 @@ document.addEventListener("keydown", (e: KeyboardEvent) => {
     resetAll();
   }
 });
+//Exportar e importar
+$exportBtn.addEventListener("click", exportTasks);
+$importBtn.addEventListener("click", () => $importFile.click());
+$importFile.addEventListener("change", () => {
+  if ($importFile.files?.length) {
+    importTasks($importFile.files[0]);
+    $importFile.value = ""; // limpiar para poder importar el mismo archivo otra vez si se quiere
+  }
+});
+// ---------- imágenes ----------
+const imageInput = document.getElementById("imageInput") as HTMLInputElement;
+const previewContainer = document.getElementById("previewContainer") as HTMLDivElement;
 
-// ===== Inicialización =====
-state.tasks = loadTasks();
-if (state.tasks.length === 0) {
-  // Semillas de demo si está vacío
-  state.tasks = [
-    { id: uid(), title: "Revisar TypeScript",          done: true,  createdAt: Date.now() - 60000 },
-    { id: uid(), title: "Agregar validación de tipos", done: false, createdAt: Date.now() - 40000 },
-    { id: uid(), title: "Probar filtros y cards",      done: false, createdAt: Date.now() - 20000 },
-  ];
+if (imageInput) {
+  imageInput.addEventListener("change", () => {
+    const file = imageInput.files?.[0];
+    previewContainer.innerHTML = "";
+
+    if (!file) {
+      previewContainer.innerHTML = "<small>No hay imagen seleccionada</small>";
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      previewContainer.innerHTML = "<small>Selecciona un archivo de imagen válido.</small>";
+      return;
+    }
+
+    const img = document.createElement("img");
+    img.className = "img-fluid rounded shadow-sm mt-2";
+    img.style.maxWidth = "300px";
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      img.src = e.target?.result as string;
+      previewContainer.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
-render();
+// ---------- Comentarios ----------
+const chatBox = document.getElementById("chatBox") as HTMLDivElement;
+const chatInput = document.getElementById("chatInput") as HTMLInputElement;
+const sendBtn = document.getElementById("sendBtn") as HTMLButtonElement;
+
+function addMessage(text: string) {
+  // Si es el primer mensaje, limpia el texto "No hay mensajes"
+  if (chatBox.querySelector("small")) chatBox.innerHTML = "";
+
+  const msg = document.createElement("div");
+  msg.className = "mb-2 p-2 rounded bg-white shadow-sm";
+  msg.textContent = text;
+  chatBox.appendChild(msg);
+
+  // Scroll automático al final
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+sendBtn.addEventListener("click", () => {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  addMessage(text);
+  chatInput.value = "";
+});
+
+chatInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+// ===== Inicialización =====
+// Verificar autenticación antes de cargar la aplicación
+if (!checkAuthentication()) {
+  redirectToLogin();
+} else {
+  // Usuario autenticado, cargar la aplicación
+  state.tasks = loadTasks();
+  if (state.tasks.length === 0) {
+    // Semillas de demo si está vacío
+    state.tasks = [
+      { id: uid(), title: "Revisar TypeScript",          done: true,  createdAt: Date.now() - 60000 },
+      { id: uid(), title: "Agregar validación de tipos", done: false, createdAt: Date.now() - 40000 },
+      { id: uid(), title: "Probar filtros y cards",      done: false, createdAt: Date.now() - 20000 },
+    ];
+  }
+
+  render();
+}

@@ -69,23 +69,75 @@
     <img src="Imagen2.png" alt="Mi Imagen" class="logo">
 
     <script>
+        // Verificar si ya está autenticado
+        function checkExistingSession() {
+            try {
+                const sessionData = localStorage.getItem('todo-app-session');
+                if (sessionData) {
+                    const session = JSON.parse(sessionData);
+                    const now = Date.now();
+                    const sessionAge = now - session.loginTime;
+                    const maxAge = 24 * 60 * 60 * 1000; // 24 horas
+                    
+                    if (sessionAge < maxAge && session.isAuthenticated) {
+                        // Ya está autenticado, redirigir al index
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('Error verificando sesión:', error);
+            }
+        }
+
+        // Función para guardar la sesión
+        function saveSession(username, email) {
+            const session = {
+                isAuthenticated: true,
+                username: username,
+                email: email,
+                loginTime: Date.now()
+            };
+            
+            try {
+                localStorage.setItem('todo-app-session', JSON.stringify(session));
+                return true;
+            } catch (error) {
+                console.error('Error guardando sesión:', error);
+                return false;
+            }
+        }
+
+        // Verificar sesión existente al cargar la página
+        checkExistingSession();
 
         document.getElementById('form-login').addEventListener('submit', function (e) {
             e.preventDefault();
+            
             // Valores de ejemplo para login exitoso
             const usuarioValido = 'admin';
             const correoValido = 'admin@example.com';
             const contrasenaValida = '1234';
+            
             const usuario = document.getElementById('nombre').value;
             const correo = document.getElementById('correo').value;
             const contrasena = document.getElementById('contraseña').value;
+            
             if (usuario === usuarioValido && correo === correoValido && contrasena === contrasenaValida) {
-                document.getElementById('mensaje-exito').textContent = 'Login exitoso, redirigiendo...';
-                setTimeout(function() {
-                    window.location.href = 'index.html';
-                }, 1200);
+                // Guardar sesión
+                if (saveSession(usuario, correo)) {
+                    document.getElementById('mensaje-exito').textContent = 'Login exitoso, redirigiendo...';
+                    document.getElementById('mensaje-exito').style.color = 'green';
+                    
+                    setTimeout(function() {
+                        window.location.href = 'index.html';
+                    }, 1200);
+                } else {
+                    document.getElementById('mensaje-exito').textContent = 'Error al guardar la sesión';
+                    document.getElementById('mensaje-exito').style.color = 'red';
+                }
             } else {
-                document.getElementById('mensaje-exito').textContent = 'Usuario o contraseña incorrectos';
+                document.getElementById('mensaje-exito').textContent = 'Usuario, correo o contraseña incorrectos';
                 document.getElementById('mensaje-exito').style.color = 'red';
             }
         });

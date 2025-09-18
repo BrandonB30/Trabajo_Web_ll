@@ -62,17 +62,40 @@
             <button data-filter="active" class="btn btn-outline-secondary">Activas</button>
             <button data-filter="done" class="btn btn-outline-secondary">Completadas</button>
           </div>
+          <!-- Exportar e importar tareas -->
+      <div class="d-flex gap-2">
+        <button id="export-btn" class="btn btn-outline-info btn-sm">
+         <i class="bi bi-download me-1"></i> Exportar tareas
+      </button>
+      
 
           <div class="ms-auto d-flex align-items-center gap-2">
             <span id="counter" class="badge rounded-pill text-bg-light px-3 py-2">0 tareas</span>
             <button id="clear-done" class="btn btn-outline-danger btn-sm">
               <i class="bi bi-trash3 me-1"></i>Eliminar completadas
             </button>
+
+            <button id="btn-video-cronograma" class="btn btn-success btn-sm">
+              <i class="bi bi-play-circle me-1"></i>Ver video cronograma
+              </button>
             <!-- El botón "Resetear lista" se inyecta desde main.ts (ensureResetButton) -->
+             <!-- Botón Recursos -->
+<button id="btn-recursos" class="btn btn-outline-info">
+  Recursos
+  </button>
+  <script>
+    document.getElementById("btn-recursos")?.addEventListener("click", () => {
+      window.location.href = "recursos.html"; // redirige a otra página
+    });
+  </script>
           </div>
         </div>
       </div>
     </div>
+  </div>
+  
+</div>
+
 
     <!-- Cards de “estadísticas” -->
     <div class="row g-3 mb-3" id="stats-row">
@@ -118,7 +141,36 @@
     <div id="empty" class="text-secondary text-center py-5 d-none">
       <i class="bi bi-emoji-neutral fs-3 d-block mb-2"></i>
       No hay tareas todavía.
+
+      
     </div>
+    </div>
+    <!-- Sección para carga de imágenes -->
+<div class="card shadow-sm border-0 mb-3">
+  <div class="card-body">
+    <h5 class="card-title">📷 Carga de imágenes</h5>
+    <input type="file" id="imageInput" accept="image/*" class="form-control mb-3" />
+    <div id="previewContainer" class="text-center text-secondary">
+      <small>No hay imagen seleccionada</small>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-3">
+  <div class="card-body">
+    <h5 class="card-title">💬 Comentarios</h5>
+    <div id="chatBox" class="border rounded p-3 mb-3 bg-light" style="height:200px; overflow-y:auto;">
+      <small class="text-secondary">No hay mensajes aún.</small>
+    </div>
+    <div class="input-group">
+      <input type="text" id="chatInput" class="form-control" placeholder="Escribe un mensaje..." />
+      <button class="btn btn-primary" id="sendBtn">Enviar</button>
+    </div>
+  </div>
+</div>
+
+    
+</div>  
   </div>
 
   <!-- Bootstrap 5 JS -->
@@ -141,5 +193,14 @@
       window.open(location.href, '_blank', 'noopener');
     });
   </script>
+
+<script>
+  document.getElementById("btn-video-cronograma")?.addEventListener("click", () => {
+    window.open("https://youtu.be/VZs-w3WZqwk?si=J_FEeUAB1ukly6ob", "_blank", "noopener");
+  });
+</script>
+
+
+  
 </body>
 </html>

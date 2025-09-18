@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Recursos</title>
+  <link rel="stylesheet" href="stylesheet.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    input, textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    button {
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #resources-list {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    #resources-list li {
+      background: #f9f9f9;
+      margin-bottom: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      border-left: 4px solid #007bff;
+    }
+
+    #resources-list a {
+      font-weight: bold;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    #resources-list small {
+      display: block;
+      color: #555;
+      margin-top: 5px;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 20px;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-btn">← Volver a Tareas</a>
+    <h1>Recursos de estudio</h1>
+
+    <!-- Formulario -->
+    <div class="form-group">
+      <input id="res-title" type="text" placeholder="Título del recurso">
+      <input id="res-url" type="text" placeholder="URL (opcional)">
+      <textarea id="res-notes" placeholder="Notas adicionales"></textarea>
+      <button id="add-resource-btn">Agregar recurso</button>
+    </div>
+
+   <!-- Lista de recursos -->
+<h2 style="margin-top:20px;">Mis Recursos</h2>
+<ul id="resources-list"></ul>
+
+
+  <script>
+  const STORAGE_KEY = "todo-app-resources";
+
+  let resources = loadResources();
+  const listEl = document.getElementById("resources-list");
+
+  function uid() {
+    return Math.random().toString(36).slice(2, 9);
+  }
+
+  function saveResources() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(resources));
+  }
+
+  function loadResources() {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  }
+
+  function renderResources() {
+    listEl.innerHTML = "";
+    if (resources.length === 0) {
+      listEl.innerHTML = "<li>No hay recursos guardados.</li>";
+      return;
+    }
+    for (const r of resources) {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        ${r.url ? <a href="${r.url}" target="_blank">${r.title}</a> : r.title}
+        <small>${r.notes || ""}</small>
+      `;
+      listEl.appendChild(li);
+    }
+  }
+
+  function addResource(title, url, notes) {
+    if (!title.trim()) return;
+    resources.unshift({ id: uid(), title, url, notes, createdAt: Date.now() });
+    saveResources();
+    renderResources();
+    document.getElementById("res-title").value = "";
+    document.getElementById("res-url").value = "";
+    document.getElementById("res-notes").value = "";
+  }
+
+  document.getElementById("add-resource-btn")?.addEventListener("click", () => {
+    const title = document.getElementById("res-title").value;
+    const url = document.getElementById("res-url").value;
+    const notes = document.getElementById("res-notes").value;
+    addResource(title, url, notes);
+  });
+
+  renderResources();
+</script>
+
+</body>
+</html>
