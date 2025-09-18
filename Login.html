@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="stylelogin.css">
 </head>
 
 <body>
@@ -70,9 +70,24 @@
 
     <script>
 
-        document.querySelector('form').addEventListener('submit', function (e) {
+        document.getElementById('form-login').addEventListener('submit', function (e) {
             e.preventDefault();
-            document.getElementById('mensaje-exito').textContent = 'El ingreso se generó de manera exitosa';
+            // Valores de ejemplo para login exitoso
+            const usuarioValido = 'admin';
+            const correoValido = 'admin@example.com';
+            const contrasenaValida = '1234';
+            const usuario = document.getElementById('nombre').value;
+            const correo = document.getElementById('correo').value;
+            const contrasena = document.getElementById('contraseña').value;
+            if (usuario === usuarioValido && correo === correoValido && contrasena === contrasenaValida) {
+                document.getElementById('mensaje-exito').textContent = 'Login exitoso, redirigiendo...';
+                setTimeout(function() {
+                    window.location.href = 'Vistas/index.html';
+                }, 1200);
+            } else {
+                document.getElementById('mensaje-exito').textContent = 'Usuario o contraseña incorrectos';
+                document.getElementById('mensaje-exito').style.color = 'red';
+            }
         });
     </script>
 </body>
