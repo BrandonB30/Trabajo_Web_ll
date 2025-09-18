@@ -82,7 +82,7 @@
             if (usuario === usuarioValido && correo === correoValido && contrasena === contrasenaValida) {
                 document.getElementById('mensaje-exito').textContent = 'Login exitoso, redirigiendo...';
                 setTimeout(function() {
-                    window.location.href = 'Vistas/index.html';
+                    window.location.href = 'index.html';
                 }, 1200);
             } else {
                 document.getElementById('mensaje-exito').textContent = 'Usuario o contraseña incorrectos';
